@@ -3,7 +3,9 @@
 FROM mcr.microsoft.com/azure-functions/node:3.0
 
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
-    AzureFunctionsJobHost__Logging__Console__IsEnabled=true
+    AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
+    queueConnectionString=DefaultEndpointsProtocol=https;AccountName=assignment5storages;AccountKey=CKqFXFs7o6y8d4dMfJF7/vaL0x7CDdGXXO6/5BLtcOSx85KqKzBqHeAEvOH05+HHM9oZxwmPra4++AStsXqWrA==;EndpointSuffix=core.windows.net \
+    cosmosDBConnectionString=AccountEndpoint=https://assignment4-db.documents.azure.com:443/;AccountKey=C9AoIod2oGDn6DFpWFxENKWUGiHEZCKNrG9NUzkmnR4TRSBZRFkYA2vo2Rd537QqmsZoBlU7SbqcACDbAiPdoA==;
 
 COPY . /home/site/wwwroot
 
