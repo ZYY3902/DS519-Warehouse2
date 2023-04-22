@@ -1,41 +1,50 @@
 import React from 'react';
 import { useState } from 'react';
 import Grid from "@mui/material/Unstable_Grid2";
-import { Typography } from "@mui/material";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import Input from "@mui/material/Input";
+import { Typography, TextField, Button, Box,Input } from "@mui/material";
 import { BlobServiceClient } from "@azure/storage-blob";
 
 function App() {
   const [file, setFile] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [inputValue, setInputValue] = useState('');
 
   const handleChooseImage = (event) => {
     setFile(event.target.files[0]);
   };
 
+  const handleInputValue = (event) => {
+    setInputValue(event.target.value);
+  };
+ 
   const handleUploadImage = async () => {
-    if (!file) {
+    if (!file && !inputValue) {
       return;
     }
+    let imageUrl = '';
 
-    const connectionString = "BlobEndpoint=https://assignment5storages.blob.core.windows.net/;QueueEndpoint=https://assignment5storages.queue.core.windows.net/;FileEndpoint=https://assignment5storages.file.core.windows.net/;TableEndpoint=https://assignment5storages.table.core.windows.net/;SharedAccessSignature=sv=2021-12-02&ss=b&srt=co&sp=rwdlaciytfx&se=2023-12-30T08:38:21Z&st=2023-04-13T23:38:21Z&spr=https&sig=S0djOo5scDvCMh%2BKuxGU89pZw4i8QDiJmdNH8QL8gsc%3D";
-    const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-    const containerName = "image";
-    const containerClient = blobServiceClient.getContainerClient(containerName);
+    if (file){
+      const connectionString = "BlobEndpoint=https://assignment5storages.blob.core.windows.net/;QueueEndpoint=https://assignment5storages.queue.core.windows.net/;FileEndpoint=https://assignment5storages.file.core.windows.net/;TableEndpoint=https://assignment5storages.table.core.windows.net/;SharedAccessSignature=sv=2021-12-02&ss=b&srt=co&sp=rwdlaciytfx&se=2023-12-30T08:38:21Z&st=2023-04-13T23:38:21Z&spr=https&sig=S0djOo5scDvCMh%2BKuxGU89pZw4i8QDiJmdNH8QL8gsc%3D";
+      const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+      const containerName = "image";
+      const containerClient = blobServiceClient.getContainerClient(containerName);
 
-    const blob = new Blob([file], { type: file.type });
-    const blockBlobClient = containerClient.getBlockBlobClient(file.name);
-    await blockBlobClient.uploadData(blob);
-    const blobUrl = blockBlobClient.url;
-    setSuccessMessage("Image uploaded successfully!");
+      const blob = new Blob([file], { type: file.type });
+      const blockBlobClient = containerClient.getBlockBlobClient(file.name);
+      await blockBlobClient.uploadData(blob);
+      imageUrl = blockBlobClient.url;
+    }
+    else if (inputValue){
+      imageUrl = inputValue;
+    }
+
+    setSuccessMessage("File uploaded successfully!");
 
     // Call HTTP trigger and send blob URL to queue
-    const http_url = 'http://localhost:7071/api/AddItem';
+    const http_url = 'https://warehouse-containerapp.salmondesert-8cf08169.eastus.azurecontainerapps.io/api/AddItem';
     const response = await fetch(http_url, {
       method: 'POST',
-      body: JSON.stringify({ url: blobUrl }),
+      body: JSON.stringify({ url: imageUrl }),
       headers: {
         'Content-Type': 'application/json'
       }
@@ -53,7 +62,7 @@ function App() {
           </Typography>
         </Grid>
         <Grid xs={12} container alignItems="center" justifyContent="center">
-          <Box sx={{ display: "flex", flexDirection: "row", gap: "1rem" }}>
+          <Box sx={{ display: "flex", flexDirection: "row", gap: "1rem" }} m>
             <Input
               type="file"
               onChange={handleChooseImage}
@@ -70,11 +79,26 @@ function App() {
             </Button>
           </Box>
         </Grid>
+        <Grid xs={12} container alignItems="center" justifyContent="center">
+          <Box sx={{ m: 1, display: "flex", flexDirection: "row", gap: "1rem" }}>
+            <TextField
+              label="Enter the URL"
+              variant="outlined"
+              value={inputValue}
+              onChange={handleInputValue}
+            />
+            <Button variant="contained" onClick={handleUploadImage}>
+              Upload the URL
+            </Button>
+          </Box>
+        </Grid>
         {successMessage && (
           <Grid xs={12} container alignItems="center" justifyContent="center">
-            <Typography variant="body2" gutterBottom>
-              {successMessage}
-            </Typography>
+            <Box sx={{ m: 1 }}>
+              <Typography variant="body2" gutterBottom>
+                {successMessage}
+              </Typography>
+            </Box>
           </Grid>
         )}
       </Grid>
